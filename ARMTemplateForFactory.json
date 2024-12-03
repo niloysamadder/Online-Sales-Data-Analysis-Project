@@ -1,0 +1,724 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "type": "string",
+            "metadata": "Data Factory name",
+            "defaultValue": "adfonlinesalesdata"
+        },
+        "ls_https_online_sales_data_password": {
+            "type": "secureString",
+            "metadata": "Secure string for 'password' of 'ls_https_online_sales_data'"
+        },
+        "ls_datalake_onlinesalesdata_accountKey": {
+            "type": "secureString",
+            "metadata": "Secure string for 'accountKey' of 'ls_datalake_onlinesalesdata'"
+        },
+        "ls_sqldatabase_onlinesalesdata_password": {
+            "type": "secureString",
+            "metadata": "Secure string for 'password' of 'ls_sqldatabase_onlinesalesdata'"
+        },
+        "ls_https_online_sales_data_properties_typeProperties_url": {
+            "type": "string",
+            "defaultValue": "https://www.kaggle.com"
+        },
+        "ls_https_online_sales_data_properties_typeProperties_userName": {
+            "type": "string",
+            "defaultValue": "niloysamadder"
+        },
+        "ls_datalake_onlinesalesdata_properties_typeProperties_url": {
+            "type": "string",
+            "defaultValue": "https://datalakeonlinesalesdata.dfs.core.windows.net/"
+        },
+        "ls_sqldatabase_onlinesalesdata_properties_typeProperties_server": {
+            "type": "string",
+            "defaultValue": "online-sales-data-srv.database.windows.net"
+        },
+        "ls_sqldatabase_onlinesalesdata_properties_typeProperties_database": {
+            "type": "string",
+            "defaultValue": "online_sales_data_db"
+        },
+        "ls_sqldatabase_onlinesalesdata_properties_typeProperties_userName": {
+            "type": "string",
+            "defaultValue": "admin-onlinesalesdata"
+        }
+    },
+    "variables": {
+        "factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+    },
+    "resources": [
+        {
+            "name": "[concat(parameters('factoryName'), '/ls_https_online_sales_data')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "HttpServer",
+                "typeProperties": {
+                    "url": "[parameters('ls_https_online_sales_data_properties_typeProperties_url')]",
+                    "enableServerCertificateValidation": true,
+                    "authenticationType": "Basic",
+                    "userName": "[parameters('ls_https_online_sales_data_properties_typeProperties_userName')]",
+                    "password": {
+                        "type": "SecureString",
+                        "value": "[parameters('ls_https_online_sales_data_password')]"
+                    }
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/ls_datalake_onlinesalesdata')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureBlobFS",
+                "typeProperties": {
+                    "url": "[parameters('ls_datalake_onlinesalesdata_properties_typeProperties_url')]",
+                    "accountKey": {
+                        "type": "SecureString",
+                        "value": "[parameters('ls_datalake_onlinesalesdata_accountKey')]"
+                    }
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/ds_http_source_onlinesourcedata')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "ls_https_online_sales_data",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "DelimitedText",
+                "typeProperties": {
+                    "location": {
+                        "type": "HttpServerLocation",
+                        "relativeUrl": "api/v1/datasets/download/yusufdelikkaya/online-sales-dataset"
+                    },
+                    "columnDelimiter": ",",
+                    "compressionCodec": "ZipDeflate",
+                    "escapeChar": "\\",
+                    "firstRowAsHeader": true,
+                    "quoteChar": "\""
+                },
+                "schema": []
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/ls_https_online_sales_data')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/ds_datalake_sink_onlinesalesdata')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "ls_datalake_onlinesalesdata",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "DelimitedText",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobFSLocation",
+                        "fileName": "online_sales_data.csv",
+                        "folderPath": "online_sales_data",
+                        "fileSystem": "raw-online-sales-data"
+                    },
+                    "columnDelimiter": ",",
+                    "escapeChar": "\\",
+                    "firstRowAsHeader": true,
+                    "quoteChar": "\""
+                },
+                "schema": []
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/ls_datalake_onlinesalesdata')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/pipeline_ingestion_OnlineSalesData')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "Ingestion of Online Sales Data",
+                        "type": "Copy",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "source": {
+                                "type": "DelimitedTextSource",
+                                "storeSettings": {
+                                    "type": "HttpReadSettings",
+                                    "requestMethod": "GET"
+                                },
+                                "formatSettings": {
+                                    "type": "DelimitedTextReadSettings",
+                                    "compressionProperties": {
+                                        "type": "ZipDeflateReadSettings"
+                                    }
+                                }
+                            },
+                            "sink": {
+                                "type": "DelimitedTextSink",
+                                "storeSettings": {
+                                    "type": "AzureBlobFSWriteSettings"
+                                },
+                                "formatSettings": {
+                                    "type": "DelimitedTextWriteSettings",
+                                    "quoteAllText": true,
+                                    "fileExtension": ".txt"
+                                }
+                            },
+                            "enableStaging": false,
+                            "translator": {
+                                "type": "TabularTranslator",
+                                "typeConversion": true,
+                                "typeConversionSettings": {
+                                    "allowDataTruncation": true,
+                                    "treatBooleanAsNumber": false
+                                }
+                            }
+                        },
+                        "inputs": [
+                            {
+                                "referenceName": "ds_http_source_onlinesourcedata",
+                                "type": "DatasetReference",
+                                "parameters": {}
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "referenceName": "ds_datalake_sink_onlinesalesdata",
+                                "type": "DatasetReference",
+                                "parameters": {}
+                            }
+                        ]
+                    }
+                ],
+                "policy": {
+                    "elapsedTimeMetric": {}
+                },
+                "annotations": []
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/datasets/ds_http_source_onlinesourcedata')]",
+                "[concat(variables('factoryId'), '/datasets/ds_datalake_sink_onlinesalesdata')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/dataflow_transformation_onlinesalesdata')]",
+            "type": "Microsoft.DataFactory/factories/dataflows",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "type": "MappingDataFlow",
+                "typeProperties": {
+                    "sources": [
+                        {
+                            "dataset": {
+                                "referenceName": "df_source_onlinesalesdata",
+                                "type": "DatasetReference"
+                            },
+                            "name": "SourceOnlineSalesData"
+                        }
+                    ],
+                    "sinks": [
+                        {
+                            "dataset": {
+                                "referenceName": "ds_transformed_sink_onlinesalesdata",
+                                "type": "DatasetReference"
+                            },
+                            "name": "sinkTransformedOnlineSalesData"
+                        }
+                    ],
+                    "transformations": [
+                        {
+                            "name": "derivedColumn1"
+                        },
+                        {
+                            "name": "filterCustomerID"
+                        },
+                        {
+                            "name": "filterShippingCost"
+                        },
+                        {
+                            "name": "filterWarehouseLocation"
+                        }
+                    ],
+                    "scriptLines": [
+                        "source(output(",
+                        "          InvoiceNo as string,",
+                        "          StockCode as string,",
+                        "          Description as string,",
+                        "          Quantity as short,",
+                        "          InvoiceDate as date 'yyyy-MM-dd',",
+                        "          UnitPrice as double,",
+                        "          CustomerID as string,",
+                        "          Country as string,",
+                        "          Discount as double,",
+                        "          PaymentMethod as string,",
+                        "          ShippingCost as double,",
+                        "          Category as string,",
+                        "          SalesChannel as string,",
+                        "          ReturnStatus as string,",
+                        "          ShipmentProvider as string,",
+                        "          WarehouseLocation as string,",
+                        "          OrderPriority as string",
+                        "     ),",
+                        "     allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     inferDriftedColumnTypes: true,",
+                        "     ignoreNoFilesFound: false) ~> SourceOnlineSalesData",
+                        "SourceOnlineSalesData derive(Quantity = abs(Quantity),",
+                        "          InvoiceDate = iif(year(InvoiceDate) == 2025, addDays(InvoiceDate, - 365), InvoiceDate)\r",
+                        ",",
+                        "          UnitPrice = abs(UnitPrice),",
+                        "          PaymentMethod = iif(PaymentMethod == 'paypall', 'Paypal', PaymentMethod)) ~> derivedColumn1",
+                        "derivedColumn1 filter(!isNull(CustomerID)) ~> filterCustomerID",
+                        "filterCustomerID filter(!isNull(ShippingCost)) ~> filterShippingCost",
+                        "filterShippingCost filter(!isNull(WarehouseLocation)) ~> filterWarehouseLocation",
+                        "filterWarehouseLocation sink(allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     umask: 0022,",
+                        "     preCommands: [],",
+                        "     postCommands: [],",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true) ~> sinkTransformedOnlineSalesData"
+                    ]
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/datasets/df_source_onlinesalesdata')]",
+                "[concat(variables('factoryId'), '/datasets/ds_transformed_sink_onlinesalesdata')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/df_source_onlinesalesdata')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "ls_datalake_onlinesalesdata",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "DelimitedText",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobFSLocation",
+                        "fileName": "online_sales_data.csv",
+                        "folderPath": "online_sales_data",
+                        "fileSystem": "raw-online-sales-data"
+                    },
+                    "columnDelimiter": ",",
+                    "escapeChar": "\\",
+                    "firstRowAsHeader": true,
+                    "quoteChar": "\""
+                },
+                "schema": []
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/ls_datalake_onlinesalesdata')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/ds_transformed_sink_onlinesalesdata')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "ls_datalake_onlinesalesdata",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "DelimitedText",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobFSLocation",
+                        "fileName": "transformed_online_sales_data.csv",
+                        "folderPath": "Transformed_Online_Sales_Data",
+                        "fileSystem": "transformed-online-sales-data"
+                    },
+                    "columnDelimiter": ",",
+                    "escapeChar": "\\",
+                    "firstRowAsHeader": true,
+                    "quoteChar": "\""
+                },
+                "schema": []
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/ls_datalake_onlinesalesdata')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/pipeline_Transformation_OnlineSalesData')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "Transformation of Online Sales Data",
+                        "type": "ExecuteDataFlow",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "dataflow": {
+                                "referenceName": "dataflow_transformation_onlinesalesdata",
+                                "type": "DataFlowReference",
+                                "parameters": {},
+                                "datasetParameters": {
+                                    "SourceOnlineSalesData": {},
+                                    "sinkTransformedOnlineSalesData": {}
+                                }
+                            },
+                            "staging": {},
+                            "compute": {
+                                "coreCount": 8,
+                                "computeType": "General"
+                            },
+                            "traceLevel": "Fine"
+                        }
+                    }
+                ],
+                "policy": {
+                    "elapsedTimeMetric": {}
+                },
+                "annotations": []
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/dataflows/dataflow_transformation_onlinesalesdata')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/pipeline_load_OnlineSalesData')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "Loading dataset into SQL Database",
+                        "type": "Copy",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "source": {
+                                "type": "DelimitedTextSource",
+                                "storeSettings": {
+                                    "type": "AzureBlobFSReadSettings",
+                                    "recursive": true,
+                                    "wildcardFileName": "*",
+                                    "enablePartitionDiscovery": false
+                                },
+                                "formatSettings": {
+                                    "type": "DelimitedTextReadSettings"
+                                }
+                            },
+                            "sink": {
+                                "type": "AzureSqlSink",
+                                "preCopyScript": "TRUNCATE TABLE online_sales_data.OnlineSalesData;",
+                                "writeBehavior": "insert",
+                                "sqlWriterUseTableLock": false,
+                                "disableMetricsCollection": false
+                            },
+                            "enableStaging": false,
+                            "translator": {
+                                "type": "TabularTranslator",
+                                "typeConversion": true,
+                                "typeConversionSettings": {
+                                    "allowDataTruncation": true,
+                                    "treatBooleanAsNumber": false
+                                }
+                            }
+                        },
+                        "inputs": [
+                            {
+                                "referenceName": "ds_transformed_sink_onlinesalesdata",
+                                "type": "DatasetReference",
+                                "parameters": {}
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "referenceName": "SQLDatabase_online_Sales_Data",
+                                "type": "DatasetReference",
+                                "parameters": {}
+                            }
+                        ]
+                    }
+                ],
+                "policy": {
+                    "elapsedTimeMetric": {}
+                },
+                "annotations": []
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/datasets/ds_transformed_sink_onlinesalesdata')]",
+                "[concat(variables('factoryId'), '/datasets/SQLDatabase_online_Sales_Data')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/ls_sqldatabase_onlinesalesdata')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureSqlDatabase",
+                "typeProperties": {
+                    "server": "[parameters('ls_sqldatabase_onlinesalesdata_properties_typeProperties_server')]",
+                    "database": "[parameters('ls_sqldatabase_onlinesalesdata_properties_typeProperties_database')]",
+                    "encrypt": "mandatory",
+                    "trustServerCertificate": false,
+                    "authenticationType": "SQL",
+                    "userName": "[parameters('ls_sqldatabase_onlinesalesdata_properties_typeProperties_userName')]",
+                    "password": {
+                        "type": "SecureString",
+                        "value": "[parameters('ls_sqldatabase_onlinesalesdata_password')]"
+                    }
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/SQLDatabase_online_Sales_Data')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "ls_sqldatabase_onlinesalesdata",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "AzureSqlTable",
+                "schema": [
+                    {
+                        "name": "InvoiceNo",
+                        "type": "varchar"
+                    },
+                    {
+                        "name": "StockCode",
+                        "type": "varchar"
+                    },
+                    {
+                        "name": "Description",
+                        "type": "varchar"
+                    },
+                    {
+                        "name": "Quantity",
+                        "type": "int",
+                        "precision": 10
+                    },
+                    {
+                        "name": "InvoiceDate",
+                        "type": "datetime",
+                        "precision": 23,
+                        "scale": 3
+                    },
+                    {
+                        "name": "UnitPrice",
+                        "type": "decimal",
+                        "precision": 10,
+                        "scale": 2
+                    },
+                    {
+                        "name": "CustomerID",
+                        "type": "varchar"
+                    },
+                    {
+                        "name": "Country",
+                        "type": "varchar"
+                    },
+                    {
+                        "name": "Discount",
+                        "type": "decimal",
+                        "precision": 5,
+                        "scale": 2
+                    },
+                    {
+                        "name": "PaymentMethod",
+                        "type": "varchar"
+                    },
+                    {
+                        "name": "ShippingCost",
+                        "type": "decimal",
+                        "precision": 10,
+                        "scale": 2
+                    },
+                    {
+                        "name": "Category",
+                        "type": "varchar"
+                    },
+                    {
+                        "name": "SalesChannel",
+                        "type": "varchar"
+                    },
+                    {
+                        "name": "ReturnStatus",
+                        "type": "varchar"
+                    },
+                    {
+                        "name": "ShipmentProvider",
+                        "type": "varchar"
+                    },
+                    {
+                        "name": "WarehouseLocation",
+                        "type": "varchar"
+                    },
+                    {
+                        "name": "OrderPriority",
+                        "type": "varchar"
+                    }
+                ],
+                "typeProperties": {
+                    "schema": "online_sales_data",
+                    "table": "OnlineSalesData"
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/ls_sqldatabase_onlinesalesdata')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/ETL Pipeline_Online_Sales_Data')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "Ingestiion of Online Sales Data",
+                        "type": "ExecutePipeline",
+                        "dependsOn": [],
+                        "policy": {
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "pipeline": {
+                                "referenceName": "pipeline_ingestion_OnlineSalesData",
+                                "type": "PipelineReference"
+                            },
+                            "waitOnCompletion": true,
+                            "parameters": {}
+                        }
+                    },
+                    {
+                        "name": "Transformation of OnlineSalesData",
+                        "type": "ExecutePipeline",
+                        "dependsOn": [
+                            {
+                                "activity": "Ingestiion of Online Sales Data",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "pipeline": {
+                                "referenceName": "pipeline_Transformation_OnlineSalesData",
+                                "type": "PipelineReference"
+                            },
+                            "waitOnCompletion": true,
+                            "parameters": {}
+                        }
+                    },
+                    {
+                        "name": "Load of OnlineSalesData",
+                        "type": "ExecutePipeline",
+                        "dependsOn": [
+                            {
+                                "activity": "Transformation of OnlineSalesData",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "pipeline": {
+                                "referenceName": "pipeline_load_OnlineSalesData",
+                                "type": "PipelineReference"
+                            },
+                            "waitOnCompletion": true,
+                            "parameters": {}
+                        }
+                    }
+                ],
+                "policy": {
+                    "elapsedTimeMetric": {}
+                },
+                "annotations": []
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/pipelines/pipeline_ingestion_OnlineSalesData')]",
+                "[concat(variables('factoryId'), '/pipelines/pipeline_Transformation_OnlineSalesData')]",
+                "[concat(variables('factoryId'), '/pipelines/pipeline_load_OnlineSalesData')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/trigger_etl_onlinesalesdata')]",
+            "type": "Microsoft.DataFactory/factories/triggers",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "runtimeState": "Started",
+                "pipelines": [
+                    {
+                        "pipelineReference": {
+                            "referenceName": "ETL Pipeline_Online_Sales_Data",
+                            "type": "PipelineReference"
+                        },
+                        "parameters": {}
+                    }
+                ],
+                "type": "ScheduleTrigger",
+                "typeProperties": {
+                    "recurrence": {
+                        "frequency": "Day",
+                        "interval": 1,
+                        "startTime": "2024-11-29T02:33:00",
+                        "timeZone": "W. Europe Standard Time",
+                        "schedule": {}
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/pipelines/ETL Pipeline_Online_Sales_Data')]"
+            ]
+        }
+    ]
+}
