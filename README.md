@@ -27,7 +27,7 @@ The project integrates Azure Data Factory for ETL processes, Azure SQL Database 
 ---
 
 ## ETL Pipeline Workflow
-![ETL Pipeline](path/to/your/ETL-pipeline-schema-image.png)
+![ETL Pipeline](https://github.com/niloysamadder/Online-Sales-Data-Analysis-Project/blob/8c1af4915a254d2295d4204750bbe9fc67b56b20/ETL%20Pipeline_Online%20Sales%20Data%20Project.PNG)
 The ETL pipeline extracts raw data, transforms it (e.g., categorizing products, handling duplicates), and loads it into Azure SQL Database for analysis. The key steps include:
 1. **Data Extraction**: Extracted data directly from the source systems using https link service.
 2. **Data Transformation**: Standardized, cleaned, and enriched the data using Data Flow.
@@ -36,7 +36,8 @@ The ETL pipeline extracts raw data, transforms it (e.g., categorizing products, 
 ---
 
 ## Star Schema Data Model
-![Star Schema](path/to/your/star-schema-visualization.png)
+![Star Schema](https://github.com/niloysamadder/Online-Sales-Data-Analysis-Project/blob/8c1af4915a254d2295d4204750bbe9fc67b56b20/Database%20Schema_Online%20Sales%20Data%20Project.PNG)
+
 The star schema includes:
 - **Fact Table**: `FactSales` containing transactional data.
 - **Dimension Tables**: Including `DimCustomer`, `DimProduct`, `DimDate`, `DimOrderPriority`, and more.
@@ -53,7 +54,7 @@ This schema improves query performance and enables seamless integration with Pow
 - Bar charts for **Top Countries** and **Top Products by Profit**.
 - Donut chart for **Sales by Sales Channel**.
 
-![Business Overview Dashboard](path/to/your/dashboard1-snapshot.png)
+![Business Overview Dashboard](https://github.com/niloysamadder/Online-Sales-Data-Analysis-Project/blob/8c1af4915a254d2295d4204750bbe9fc67b56b20/Business%20Overview_Dashboard.PNG)
 
 ---
 
@@ -63,7 +64,7 @@ This schema improves query performance and enables seamless integration with Pow
 - Combined chart for **Order Priority vs Total Profit**.
 - Donut and bar charts for **Warehouse Location** and **Shipment Providers**.
 
-![Order Analysis Dashboard](path/to/your/dashboard2-snapshot.png)
+![Order Analysis Dashboard](https://github.com/niloysamadder/Online-Sales-Data-Analysis-Project/blob/8c1af4915a254d2295d4204750bbe9fc67b56b20/Order%20Analysis_Dashboard.PNG)
 
 ---
 
@@ -73,7 +74,7 @@ This schema improves query performance and enables seamless integration with Pow
 - Tree map for **Average Profit per Order by Product Category**.
 - Drill-through capability to explore product-level details.
 
-![Product Insights Dashboard](path/to/your/dashboard3-snapshot.png)
+![Product Insights Dashboard](https://github.com/niloysamadder/Online-Sales-Data-Analysis-Project/blob/8c1af4915a254d2295d4204750bbe9fc67b56b20/Product%20Insights_Dashboard.PNG)
 
 ---
 
@@ -82,28 +83,41 @@ This schema improves query performance and enables seamless integration with Pow
 - Cards for **Total Sales**, **Profit**, and **Orders**.
 - Forecast charts for **Sales, Profit, Quantity Sold, and Orders**.
 
-![Business Growth Analysis Dashboard](path/to/your/dashboard4-snapshot.png)
+![Business Growth Analysis Dashboard](https://github.com/niloysamadder/Online-Sales-Data-Analysis-Project/blob/8c1af4915a254d2295d4204750bbe9fc67b56b20/Business%20Growth%20Analysis_Dashboard.PNG)
 
 ---
 
 ## Key Insights
 1. **Business Overview**:
-   - Highest revenue generated in 2023.
-   - Top-performing countries contribute 60% of total profit.
+   - The current sales, profit, and number of orders are about 25% less than the target sales, profit, and number of orders.
+   - Highest profit generated in 2020 around € 4.2M.
+   - Top-performing countries contributed around 52% of total profit.
 
-2. **Order Trends**:
-   - Peak order months align with marketing campaigns.
+3. **Order Trends**:
+   - Peak order months align with marketing campaigns in January and June.
    - Warehouse optimization can reduce shipping costs.
 
-3. **Product Insights**:
-   - Electronics category contributes most to profit.
-   - "Wireless Mouse" is the top-selling product.
+4. **Product Insights**:
+   - Around 45% of orders belong to the Electronics product category.
+   - Stationery products generated the highest average profit per order.
+   - "White Mug" product has the highest year-over-year growth in sales with around 23.71%. 
 
-4. **Growth Analysis**:
-   - Positive year-over-year growth in total profit.
-   - Forecast suggests consistent growth over the next four quarters.
+5. **Growth Analysis**:
+   - The forecast suggests below-average growth over the next four quarters.
 
+## Key Metrics (KPIs) to Track
+- **Total Sales**: Total amount of sales.
+- **Total Profit**: Total profit generated from selling products.
+- **Year Over Year Growth in Sales**: Growth in sales compared to the previous year.
+- **Number of Orders**: Number of Orders placed from the customers.
+- **Total Quantity of Sold**: Total number of products sold to the customers.     
 ---
+
+## Recommendation
+- Monitoring the recommended Key Performance Indicators (KPIs) to observe the growth.
+- Promoting the top-performing products based on the countries.
+- Launching campaigns for low-performing products.
+- Launching campaigns in countries with higher year-over-year growth.
 
 ## How to Use This Repository
 1. Clone this repository:
@@ -113,5 +127,11 @@ This schema improves query performance and enables seamless integration with Pow
 - ETL Pipeline Schema
 - SQL Scripts
 - Dashboard Snapshots
-3. Open the Power BI file (OnlineSalesDashboard.pbix) to interact with the dashboards.
+3. Open the Power BI file (Online Sales Data_Dashboard.pbix) to interact with the dashboards.
+---
+## Credits
+- **Dataset Source**: [Kaggle Online Sales Data](https://www.kaggle.com/datasets/yusufdelikkaya/online-sales-dataset/data)
+- **Project Author**: Niloy Samadder
+- **Contact**: [LinkedIn](https://www.linkedin.com/in/niloy-samadder-a6533a167/) | [Email](mailto:niloysamadder.ruet@gmail.com)
+
 
